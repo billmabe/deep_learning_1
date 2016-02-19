@@ -79,16 +79,24 @@ mse_df$V2 <- as.numeric(as.character(mse_df$V2))
 mse_df_new <- data.frame(cbind(substr(mse_df$model_id,1,14),substr(mse_df$model_id,15,nchar(model_id)),mse_df$V2))
 mse_df_new$X1 <- as.character(gsub("_","",mse_df_new$X1))
 mse_df_new$X1 <- as.numeric(as.character(gsub("gridnumber","",mse_df_new$X1)))
-mse_df_new$X2 <- as.character(gsub("_","",mse_df_new$X2))
+mse_df_new$X2 <- as.character(gsub("[^0-9]","",mse_df_new$X2))
 mse_df_new$X3 <- as.numeric(as.character(mse_df_new$X3))
 names(mse_df_new) <- c("Grid_Number", "Model_Number", "mse")
 
 #plot
 ggplot(mse_df_new, aes(x = Grid_Number, y = mse, levels = Model_Number)) +
-    geom_line(aes(colour = Model_Number)) +
+    geom_line(aes(colour = Model_Number), size = 2) +
     xlab("Number of nfolds in Cross Validation") + 
-    ylab("Mean Square Error")
-
+    ylab("Mean Squared Error") +
+    scale_colour_brewer(name = "Model Number", palette = 3) +
+    theme(
+    legend.text = element_text(size=10),
+    legend.title = element_text(size=12),
+    axis.text.x = element_text(size=10),
+    axis.text.y = element_text(size=10),
+    axis.title.x = element_text(size=12),
+    axis.title.y = element_text(size=12)
+    )
 #mean of mse across all runs of nfolds
 aggregate(mse_df_new$mse ~ mse_df_new$Model_Number, FUN = mean)
 
