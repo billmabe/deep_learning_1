@@ -50,7 +50,7 @@ deep_learn_grid_search <- function(n) {
 	training_frame = train,
 	validation_frame = test, #better to run with nfolds when doing hyper parameter optimizations????
 	score_interval = 2,
-	epochs = 10,
+	epochs = 1,
 	stopping_rounds = 3,
 	stopping_tolerance = 0.05,
 	stopping_metric = "misclassification",
@@ -67,24 +67,24 @@ for(i in 2:20){
 #loop through H2OGrid objects and calculate mse for each model
 mse <- NULL
 for(i in 1:length(model_list)) {
-for (model_id in model_list[[i]]@model_ids) {
-	mse <- rbind(mse,cbind(model_id,h2o.mse(h2o.getModel(model_id), valid = TRUE)))
-}}
+	for (model_id in model_list[[i]]@model_ids) {
+		mse <- rbind(mse,cbind(model_id,h2o.mse(h2o.getModel(model_id), valid = TRUE)))
+}} 
+#NOTE: mse is a character matrix
 
 #Clean the mse object after it has been populated with the results 
 row.names(mse) <- NULL
-mse_df <- as.data.frame(mse)
-mse_df$model_id <- as.character(mse_df$model_id)
-mse_df$V2 <- as.numeric(as.character(mse_df$V2))
-mse_df_new <- data.frame(cbind(substr(mse_df$model_id,1,14),substr(mse_df$model_id,15,nchar(model_id)),mse_df$V2))
-mse_df_new$X1 <- as.character(gsub("_","",mse_df_new$X1))
-mse_df_new$X1 <- as.numeric(as.character(gsub("gridnumber","",mse_df_new$X1)))
-mse_df_new$X2 <- as.character(gsub("[^0-9]","",mse_df_new$X2))
-mse_df_new$X3 <- as.numeric(as.character(mse_df_new$X3))
+mse_df <- data.frame(mse[,1],as.double(mse[,2]), stringsAsFactors = FALSE)
+save(mse_df, file = "mse.RData")
+
+mse_df_new <- data.frame(substr(mse_df[,1],1,14),substr(mse_df[,1],15,nchar(mse_df[,1])),mse_df[,2], stringsAsFactors = FALSE)
+mse_df_new[,1] <- as.integer(gsub("[^0-9]","",mse_df_new[,1]))
+mse_df_new[,2] <- as.factor(gsub("[^0-9]","",mse_df_new[,2]))
 names(mse_df_new) <- c("Grid_Number", "Model_Number", "mse")
+save(mse_df_new, file = "mse_df_new.RData")
 
 #plot
-ggplot(mse_df_new, aes(x = Grid_Number, y = mse, levels = Model_Number)) +
+plot <- ggplot(mse_df_new, aes(x = Grid_Number, y = mse, levels = Model_Number)) +
     geom_line(aes(colour = Model_Number), size = 2) +
     xlab("Number of nfolds in Cross Validation") + 
     ylab("Mean Squared Error") +
@@ -97,6 +97,8 @@ ggplot(mse_df_new, aes(x = Grid_Number, y = mse, levels = Model_Number)) +
     axis.title.x = element_text(size=12),
     axis.title.y = element_text(size=12)
     )
+plot
+
 #mean of mse across all runs of nfolds
 aggregate(mse_df_new$mse ~ mse_df_new$Model_Number, FUN = mean)
 
