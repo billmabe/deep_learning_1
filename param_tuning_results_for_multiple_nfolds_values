@@ -85,7 +85,8 @@ save(mse_df_new, file = "mse_df_new.RData")
 
 #plot
 plot <- ggplot(mse_df_new, aes(x = Grid_Number, y = mse, levels = Model_Number)) +
-    geom_line(aes(colour = Model_Number), size = 2) +
+    geom_point(aes(colour = Model_Number), size = 3) + 
+    geom_line(aes(colour = Model_Number), size = 1) +
     xlab("Number of nfolds in Cross Validation") + 
     ylab("Mean Squared Error") +
     scale_colour_brewer(name = "Model Number", palette = 3) +
@@ -97,6 +98,7 @@ plot <- ggplot(mse_df_new, aes(x = Grid_Number, y = mse, levels = Model_Number))
     axis.title.x = element_text(size=12),
     axis.title.y = element_text(size=12)
     )
+    
 plot
 
 #mean of mse across all runs of nfolds
